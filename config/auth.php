@@ -38,10 +38,11 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'backpack' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'backpack',
         ],
+        // ...
     ],
 
     /*
@@ -60,17 +61,11 @@ return [
     | Supported: "database", "eloquent"
     |
     */
-
     'providers' => [
-        'users' => [
+        'backpack' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', User::class),
+            'model' => App\Models\User::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
     ],
 
     /*

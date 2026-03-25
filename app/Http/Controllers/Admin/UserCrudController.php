@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
-
+use App\Traits\CrudPermissionTrait;
 /**
  * Class UserCrudController
  * @package App\Http\Controllers\Admin
@@ -17,18 +17,32 @@ class UserCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
-
+    use CrudPermissionTrait;
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
      * 
      * @return void
      */
-    public function setup()
-    {
-        CRUD::setModel(\App\Models\User::class);
-        CRUD::setRoute(config('backpack.base.route_prefix') . '/user');
-        CRUD::setEntityNameStrings('user', 'users');
+public function setup()
+{
+    CRUD::setModel(\App\Models\User::class);
+    CRUD::setRoute(config('backpack.base.route_prefix') . '/user');
+    CRUD::setEntityNameStrings('user', 'users');
+    parent::setup();
+
+    $user = backpack_user();
+    if (!$user) return;
+
+    $operations = ['list', 'show', 'create', 'update', 'delete'];
+
+    foreach ($operations as $operation) {
+        if ($user->can($operation)) {
+            CRUD::allowAccess($operation);
+        } else {
+            CRUD::denyAccess($operation);
+        }
     }
+}
 
     /**
      * Define what happens when the List operation is loaded.
