@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'auth.user-id' => \App\Http\Middleware\AuthenticateViaUserId::class,
+            'User-Id' => \App\Http\Middleware\User_Id::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

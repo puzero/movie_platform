@@ -36,19 +36,20 @@ class getFilms extends Command
                 }
 
                 foreach ($movies as $movieData) {
-                    Movie::firstOrCreate(
+                    $movie = Movie::firstOrCreate(
                         ['name' => $movieData['name']],
                         [
                             'budget_in_millions' => $movieData['budgetInMillions'] ?? null,
                         ]
                     );
+                    \Log::debug($movie);
                 }
             } catch (RequestException $e) {
                 \Log::error('External Api error: ' . $e->getMessage(), [
                     'message' => $e->response?->body(),
                     'status' => $e->response?->status()
                 ]);
-                $this->error("Ошибка при запросе страницы {$page}: " . $e->getMessage());
+                $this->error("Error requesting page {$page}: " . $e->getMessage());
                 return 1; 
             }
         }
