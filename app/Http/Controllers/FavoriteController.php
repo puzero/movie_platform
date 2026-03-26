@@ -12,16 +12,8 @@ class FavoriteController extends Controller
 {
     public function index(Request $request)
     {
-        $userId = $request->header('User-Id');
-        if (!$userId) {
-            return response()->json(['message' => 'нет User-Id заголовка'], 400);
-        }
 
-        try {
-            $user = User::findOrFail($userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
-        }
+        $user = $request->user();
 
         $favoriteMovies = $user->movies()->paginate(10); 
 
@@ -30,20 +22,15 @@ class FavoriteController extends Controller
 
     public function show(Request $request, $movieId)
     {
-        $userId = $request->header('User-Id');
-        if (!$userId) {
-            return response()->json(['message' => 'нет User-Id заголовка'], 400);
-        }
+        $user = $request->user();
 
-        try {
-            $user = User::findOrFail($userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         $movie = Movie::find($movieId);
         if (!$movie) {
-            return response()->json(['message' => 'Фильм не найден'], 404);
+            return response()->json(['message' => 'Movie not found'], 404);
         }
 
         return response()->json([
@@ -53,27 +40,22 @@ class FavoriteController extends Controller
 
     public function store(Request $request, $movieId)
     {
-        $userId = $request->header('User-Id');
-        if (!$userId) {
-            return response()->json(['message' => 'нет User-Id заголовка'], 400);
-        }
+        $user = $request->user();
 
-        try {
-            $user = User::findOrFail($userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         $movie = Movie::find($movieId);
         if (!$movie) {
-            return response()->json(['message' => 'Фильм не найден'], 404);
+            return response()->json(['message' => 'Movie not found'], 404);
         }
 
         $exists = UserMovie::where('user_id', $user->id)
                            ->where('movie_id', $movie->id)
                            ->exists();
         if ($exists) {
-            return response()->json(['message' => 'Фильм уже в избранном'], 409);
+            return response()->json(['message' => 'Movie already in favorites'], 409);
         }
 
         UserMovie::create([
@@ -81,25 +63,20 @@ class FavoriteController extends Controller
             'movie_id' => $movie->id
         ]);
 
-        return response()->json(['message' => 'Фильм "' . $movie->name . '" добавлен в избранное'], 201);
+        return response()->json(['message' => 'Movie "' . $movie->name . '" added to favorites'], 201);
     }
 
     public function destroy(Request $request, $movieId)
     {
-        $userId = $request->header('User-Id');
-        if (!$userId) {
-            return response()->json(['message' => 'User-Id header is required'], 400);
-        }
+        $user = $request->user();
 
-        try {
-            $user = User::findOrFail($userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         $movie = Movie::find($movieId);
         if (!$movie) {
-            return response()->json(['message' => 'Фильм не найден'], 404);
+            return response()->json(['message' => 'Movie not found'], 404);
         }
 
         $deleted = UserMovie::where('user_id', $user->id)
@@ -107,28 +84,21 @@ class FavoriteController extends Controller
                             ->delete();
 
         if ($deleted) {
-            return response()->json(['message' => 'Фильм "' . $movie->name . '" удалён из избранного'], 200);
+            return response()->json(['message' => 'Movie "' . $movie->name . '" removed from favorites'], 200);
         } else {
-            return response()->json(['message' => 'Фильм не был в избранном'], 404);
+            return response()->json(['message' => 'Movie was not in favorites'], 404);
         }
     }
 
     public function notFavorites(Request $request){
 
-        $userId = $request->header('User-Id');
-        if (!$userId) {
-            return response()->json(['message' => 'нет User-Id заголовка'], 400);
-        }
+        $user = $request->user();
 
-        try {
-            $user = User::findOrFail($userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         $loaderType = $request->query('loaderType', 'sql');
-        $perPage = (int) $request->query('per_page', 10);
-        $page = (int) $request->query('page', 1);
 
         if ($loaderType === 'sql') {
             $notFavoriteMovies = Movie::whereNotExists(function ($query) use ($user) {
@@ -136,7 +106,7 @@ class FavoriteController extends Controller
                     ->from('user_movies')
                     ->whereColumn('user_movies.movie_id', 'movies.id')
                     ->where('user_movies.user_id', $user->id);
-            })->paginate($perPage, ['*'], 'page', $page);
+            });
         } elseif ($loaderType === 'inMemory') {
             $allMovies = Movie::all();
 
@@ -150,7 +120,7 @@ class FavoriteController extends Controller
                 }
             }
         } else {
-            return response()->json(['error' => 'Неверный параметр loaderType.Используйте "sql" или "inMemory".'], 400);
+            return response()->json(['error' => 'Incorrect parameter loaderType. Use "sql" or "inMemory".'], 400);
         }
 
         return response()->json($notFavoriteMovies);

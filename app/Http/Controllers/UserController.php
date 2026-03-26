@@ -3,29 +3,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Получение информации об авторизованном пользователе.
-     */
-    public function show(Request $request)
-    {
+    public function me(Request $request){
+        
+        $user = $request->user();
 
-        $userId = $request->header('User-Id');
-
-        try {
-            $user = User::findOrFail((int) $userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         return response()->json([
-            'id'       => $user->id,
-            'email'    => $user->email,
+            'user' => $user,
+        ]);
+    }
+    public function show($id)
+    {
+        $user = User::find($id);
+
+        if(!$user){
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        return response()->json([
             'username' => $user->username,
             'name'     => $user->name,
         ]);
@@ -34,16 +39,14 @@ class UserController extends Controller
     public function update(Request $request)
     {
 
-        $userId = $request->header('User-Id');
+        $user = $request->user();
 
-        try {
-            $user = User::findOrFail((int) $userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         if($user->is_blocked){
-            return response()->json(['message' => 'Пользователь заблокирован администратором']);
+            return response()->json(['message' => 'User was blocked']);
         }
 
         $validated = $request->validate([
@@ -51,37 +54,33 @@ class UserController extends Controller
                 'sometimes',
                 'string',
                 'max:255',
-                Rule::unique('users')->ignore($user->id),
+                Rule::unique('users'),
             ],
             'name' => 'sometimes|string|max:255',
         ]);
 
         if (empty($validated)) {
-            return response()->json(['error' => 'Нет данных для обновления'], 400);
+            return response()->json(['error' => 'No data'], 400);
         }
 
         $user->update($validated);
 
         return response()->json([
-            'id'       => $user->id,
-            'email'    => $user->email,
-            'username' => $user->username,
-            'name'     => $user->name,
+            'user' => $user,
         ]);
     }
 
     public function destroy(Request $request)
     {
-        $userId = $request->header('User-Id');
 
-        try {
-            $user = User::findOrFail((int) $userId);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Пользователь не найден'], 404);
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
         $user->delete();
 
-        return response()->json(['message' => 'Успешное удаление'], 204);
+        return response()->json(['message' => 'Succesfull delete'], 200);
     }
 }
