@@ -7,15 +7,13 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () { return view('welcome');});
-
 Route::get('/auth/register', [AuthController::class, 'formRegister']);
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::get('/auth/login',[AuthController::class, 'formLogin'])->name('login');
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 
-Route::middleware(['auth:sanctum', 'User-Id'])->group(function (){
+Route::middleware(['auth:sanctum', 'User-Id','UserIsBlocked'])->group(function (){
     Route::get('/me', [UserController::class, 'me']);  
     Route::post('/me', [UserController::class, 'update']); 
     Route::delete('/me', [UserController::class, 'destroy']);

@@ -3,40 +3,62 @@
 namespace App\Traits;
 
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Backpack\PermissionManager\app\Models\Permission;
 
-/**
- * Trait CrudPermissionTrait
- *
- * Provides a method to set CRUD access based on Spatie permissions.
- * Permissions should be named as: "{operation} {entity_plural}".
- * Example: "list users", "show users", "create users", etc.
- */
 trait CrudPermissionTrait
 {
     /**
-     * Set CRUD access based on user permissions.
-     * This method should be called after CRUD is configured (model, route, entity names).
+     * Operations supported by the CRUD controller.
+     *
+     * @var array
+     */
+    public array $operations = ['list', 'show', 'create', 'update', 'delete'];
+
+    /**
+     * Set CRUD access based on user's Spatie permissions.
+     *
+     * Expected permission format: "{table}.{operation}", where operation is one of:
+     * 'list', 'show', 'create', 'update', 'delete'.
      *
      * @return void
      */
-    public function setAccessUsingPermissions(): void
+    // public function setAccessUsingPermissions()
+    // {
+    //     // Initially deny access to all operations
+    //     $this->crud->denyAccess($this->operations);
+
+    //     $user = backpack_user();
+    //     if (!$user) return;
+
+    //     $operations = Permission::pluck('name');
+
+        
+
+    //     foreach ($operations as $operation) {
+    //         $permission = explode('.',$operation)[1];
+    //         if ($user->can($operation)) {
+    //             CRUD::allowAccess($permission);
+    //         } else {
+    //             CRUD::denyAccess($permission);
+    //         }
+    //     }
+    // }
+        public function setAccessUsingPermissions()
     {
+        // Запрещаем доступ ко всем операциям по умолчанию
+        $this->crud->denyAccess($this->operations);
+
         $user = backpack_user();
         if (!$user) {
             return;
         }
-
-        $entity = CRUD::getEntityNamePlural();
-
-        $operations = ['list', 'show', 'create', 'update', 'delete'];
-
-        foreach ($operations as $operation) {
-            $permission = $operation . ' ' . $entity;
-
+        
+        $table = CRUD::getModel()->getTable();
+        // Разрешаем доступ для каждой операции, если есть соответствующее право
+        foreach ($this->operations as $operation) {
+            $permission = "{$table}.{$operation}";
             if ($user->can($permission)) {
                 CRUD::allowAccess($operation);
-            } else {
-                CRUD::denyAccess($operation);
             }
         }
     }

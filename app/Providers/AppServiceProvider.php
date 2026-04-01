@@ -23,5 +23,13 @@ class AppServiceProvider extends ServiceProvider
             \Backpack\PermissionManager\app\Http\Controllers\UserCrudController::class,
             \App\Http\Controllers\Admin\UserCrudController::class
         );
+        $this->app->bind(
+            \Backpack\PermissionManager\app\Http\Controllers\PermissionCrudController::class,
+            \App\Http\Controllers\Admin\PermissionCrudController::class
+        );
+        $this->app->bind(
+            \Backpack\PermissionManager\app\Http\Controllers\RoleCrudController::class,
+            \App\Http\Controllers\Admin\RoleCrudController::class
+        );
     }
 }

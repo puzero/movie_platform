@@ -100,13 +100,13 @@ class FavoriteController extends Controller
 
         $loaderType = $request->query('loaderType', 'sql');
 
-        if ($loaderType === 'sql') {
+        if ($loaderType == 'sql') {
             $notFavoriteMovies = Movie::whereNotExists(function ($query) use ($user) {
                 $query->select('*')
                     ->from('user_movies')
                     ->whereColumn('user_movies.movie_id', 'movies.id')
                     ->where('user_movies.user_id', $user->id);
-            });
+            })->paginate();
         } elseif ($loaderType === 'inMemory') {
             $allMovies = Movie::all();
 
