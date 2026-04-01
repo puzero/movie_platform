@@ -14,14 +14,17 @@ class RolesAndPermissionsSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // Создаём права (permissions)
-        Permission::create(['name' => 'create']);
-        Permission::create(['name' => 'read']);
-        Permission::create(['name' => 'update']);
-        Permission::create(['name' => 'delete']);
-        Permission::create(['name' => 'list']);
+        $entities = ['roles', 'permissions', 'users'];
+        $actions = ['list', 'show', 'create', 'update', 'delete'];
+
+        foreach ($entities as $entity) {
+            foreach ($actions as $action) {
+                Permission::firstOrCreate(['name' => $entity . '.' . $action]);
+            }
+        }
         // Создаём роль "moderator" с базовыми правами
         $userRole = Role::create(['name' => 'moderator']);
-        $userRole->givePermissionTo(['read']);
+        $userRole->givePermissionTo(['users.list']);
 
         // Создаём роль "admin" с расширенными правами
         $adminRole = Role::create(['name' => 'admin']);

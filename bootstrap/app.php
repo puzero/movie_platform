@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'User-Id' => \App\Http\Middleware\User_Id::class,
+            'UserIsBlocked' => \App\Http\Middleware\UserIsBlocked::class,
+            'CrudPermissions' => \App\Http\Middleware\CheckCrudPermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AuthLoginRequest;
+use App\Http\Requests\AuthRegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,44 +13,31 @@ use Laravel\Sanctum\HasApiTokens;
 class AuthController extends Controller
 {
     //
+    
 
     public function formRegister(){
         return view('welcome');
     }
-    public function register(Request $request)
+    public function register(AuthRegisterRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'user_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => [
-                'required',
-                'string',
-                'min:6',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/'
-            ]
-        ], [
-            'password.regex' => 'Пароль должен содержать хотя бы одну строчную букву, одну заглавную букву и одну цифру.',
-            'email.unique' => 'Пользователь с таким email уже зарегистрирован.'
-        ]);
+        $validated = $request->validated();
 
         try {
             $user = User::create([
                 'name' => $validated['name'],
-                'user_name' => $validated['user_name'],
+                'username' => $validated['username'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password'])
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Не удалось создать пользователя. Попробуйте позже.'
+                'message' => 'Failed to create user. Please try again later..'
             ], 500);
         }
 
         $token = $user->createToken('user_auth')->plainTextToken;
 
         return response()->json([
-            'message' => 'Регистрация успешна',
             'user_id' => $user->id,
             'token' => $token
         ], 201);
@@ -58,12 +47,9 @@ class AuthController extends Controller
         return view('welcome');
     }
 
-    public function login(Request $request){
+    public function login(AuthLoginRequest $request){
 
-        $validated = $request->validate([
-            'email' => 'required|string|email|max:255',
-            'password' => 'required|string|min:8'
-        ]);
+        $validated = $request->validated();
 
         $user = User::where('email',$validated['email'])->first();
 

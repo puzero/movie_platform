@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -36,7 +37,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(UserUpdateRequest $request)
     {
 
         $user = $request->user();
@@ -45,19 +46,7 @@ class UserController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
 
-        if($user->is_blocked){
-            return response()->json(['message' => 'User was blocked']);
-        }
-
-        $validated = $request->validate([
-            'username' => [
-                'sometimes',
-                'string',
-                'max:255',
-                Rule::unique('users'),
-            ],
-            'name' => 'sometimes|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         if (empty($validated)) {
             return response()->json(['error' => 'No data'], 400);

@@ -35,4 +35,7 @@ return [
         ],
     ],
 
+    'movie_url' => env('MOVIE_URL'),
+
+    'movie_token' => env('MOVIE_TOKEN'),
 ];

@@ -7,16 +7,19 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Console\Command;
 
-class getFilms extends Command
+class GetFilms extends Command
 {
     protected $signature = 'app:get-films {pages=3}';
 
-    protected string $baseUrl = "https://the-one-api.dev/v2/movie";
-    protected string $token = "ZP9zGomhPT1Nrl0p6hzo";
+    protected string $baseUrl;
+    protected string $token;
 
     public function __construct()
     {
         parent::__construct();
+
+        $this->baseUrl = config('services.movie_url');
+        $this->token = config('services.movie_token');
     }
 
     public function handle()
